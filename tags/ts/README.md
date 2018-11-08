@@ -39,7 +39,7 @@ ___
 
 ###  Context
 
-**Ƭ Context**: *`Object`*
+**Ƭ Context**: *`any`*
 
 *Defined in [interface.ts:1](/src/interface.ts#L1)*
 
