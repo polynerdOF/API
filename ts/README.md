@@ -10,7 +10,7 @@
 
 ### Interfaces
 
-* [ActionMetadata](interfaces/actionmetadata.md)
+* [AppIntent](interfaces/appintent.md)
 * [AppMetadata](interfaces/appmetadata.md)
 * [DesktopAgent](interfaces/desktopagent.md)
 * [IntentMetadata](interfaces/intentmetadata.md)
@@ -19,22 +19,12 @@
 
 ### Type aliases
 
-* [ActionMap](#actionmap)
 * [Context](#context)
 
 ---
 
 ## Type aliases
 
-<a id="actionmap"></a>
-
-###  ActionMap
-
-**Ƭ ActionMap**: *[ActionMetadata](interfaces/actionmetadata.md)[]*
-
-*Defined in [interface.ts:16](/src/interface.ts#L16)*
-
-___
 <a id="context"></a>
 
 ###  Context

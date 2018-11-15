@@ -17,7 +17,8 @@ A Desktop Agent can be connected to one or more App Directories and will use dir
 * [addContextListener](desktopagent.md#addcontextlistener)
 * [addIntentListener](desktopagent.md#addintentlistener)
 * [broadcast](desktopagent.md#broadcast)
-* [findIntents](desktopagent.md#findintents)
+* [findIntent](desktopagent.md#findintent)
+* [findIntentsByContext](desktopagent.md#findintentsbycontext)
 * [open](desktopagent.md#open)
 * [raiseIntent](desktopagent.md#raiseintent)
 
@@ -31,7 +32,7 @@ A Desktop Agent can be connected to one or more App Directories and will use dir
 
 ▸ **addContextListener**(handler: *`function`*): [Listener](listener.md)
 
-*Defined in [interface.ts:149](/src/interface.ts#L149)*
+*Defined in [interface.ts:176](/src/interface.ts#L176)*
 
 Adds a listener for incoming context broadcast from the Desktop Agent.
 
@@ -50,7 +51,7 @@ ___
 
 ▸ **addIntentListener**(intent: *`string`*, handler: *`function`*): [Listener](listener.md)
 
-*Defined in [interface.ts:144](/src/interface.ts#L144)*
+*Defined in [interface.ts:171](/src/interface.ts#L171)*
 
 Adds a listener for incoming Intents from the Agent.
 
@@ -70,7 +71,7 @@ ___
 
 ▸ **broadcast**(context: *[Context](../#context)*): `void`
 
-*Defined in [interface.ts:128](/src/interface.ts#L128)*
+*Defined in [interface.ts:155](/src/interface.ts#L155)*
 
 Publishes context to other apps on the desktop.
 
@@ -87,36 +88,32 @@ Publishes context to other apps on the desktop.
 **Returns:** `void`
 
 ___
-<a id="findintents"></a>
+<a id="findintent"></a>
 
-###  findIntents
+###  findIntent
 
-▸ **findIntents**(intent: *`string`*, context?: *[Context](../#context)*): `Promise`<`Array`<[ActionMetadata](actionmetadata.md)>>
+▸ **findIntent**(intent: *`string`*, context?: *[Context](../#context)*): `Promise`<[AppIntent](appintent.md)>
 
-*Defined in [interface.ts:120](/src/interface.ts#L120)*
+*Defined in [interface.ts:112](/src/interface.ts#L112)*
 
-Finds a mapping of Intents and Apps (action metadata) from an intent & context pair
+Find out more information about a particular intent by passing its name, and optionally its context.
 
-findIntents is effectively granting programmatic access to the Desktop Agent's resolver. Returns a promise that resolves to an Array. The resolved dataset & metadata is Desktop Agent-specific. If intent argument is falsey, then all possible intents - and apps corresponding to the intents - are resolved for the provided context. If the resolution errors, it returns an `Error` with a string from the `ResolveError` enumeration.
+findIntent is effectively granting programmatic access to the Desktop Agent's resolver. A promise resolving to the intent, its metadata and metadata about the apps that registered it is returned. This can be used to raise the intent against a specific app.
+
+If the resolution fails, the promise will return an `Error` with a string from the `ResolveError` enumeration.
 
 ```javascript
-// find what intents and apps are supported for a given context
-const actionMetadata = await agent.findIntents(null, context);
-// e.g.:
-// [{
-//     intent: { name: "StartCall", displayName: "Call" },
-//     apps: [{ name: "Skype" }]
-// },
+// I know 'StartChat' exists as a concept, and want to know more about it ...
+const appIntent = await agent.findIntent("StartChat");
+
+// returns a single AppIntent:
 // {
 //     intent: { name: "StartChat", displayName: "Chat" },
 //     apps: [{ name: "Skype" }, { name: "Symphony" }, { name: "Slack" }]
-// }];
+// }
 
-// select a particular intent to raise, targeted at a particular app
-const selectedAction = actionMetadata[1];
-const selectedApp = selectedAction.apps[0];
-
-await agent.raiseIntent(selectedAction.intent.name, context, selectedApp.name);
+// raise the intent against a particular app
+await agent.raiseIntent(appIntent.intent.name, context, appIntent.apps[0].name);
 ```
 
 **Parameters:**
@@ -126,7 +123,54 @@ await agent.raiseIntent(selectedAction.intent.name, context, selectedApp.name);
 | intent | `string` |
 | `Optional` context | [Context](../#context) |
 
-**Returns:** `Promise`<`Array`<[ActionMetadata](actionmetadata.md)>>
+**Returns:** `Promise`<[AppIntent](appintent.md)>
+
+___
+<a id="findintentsbycontext"></a>
+
+###  findIntentsByContext
+
+▸ **findIntentsByContext**(context: *[Context](../#context)*): `Promise`<`Array`<[AppIntent](appintent.md)>>
+
+*Defined in [interface.ts:147](/src/interface.ts#L147)*
+
+Find all the avalable intents for a particular context.
+
+findIntents is effectively granting programmatic access to the Desktop Agent's resolver. A promise resolving to all the intents, their metadata and metadata about the apps that registered it is returned, based on the context types the intents have registered.
+
+If the resolution fails, the promise will return an `Error` with a string from the `ResolveError` enumeration.
+
+```javascript
+// I have a context object, and I want to know what I can do with it, hence, I look for for intents...
+const appIntents = await agent.findIntentsForContext(context);
+
+// returns for example:
+// [{
+//     intent: { name: "StartCall", displayName: "Call" },
+//     apps: [{ name: "Skype" }]
+// },
+// {
+//     intent: { name: "StartChat", displayName: "Chat" },
+//     apps: [{ name: "Skype" }, { name: "Symphony" }, { name: "Slack" }]
+// }];
+
+// select a particular intent to raise
+const startChat = appIntents[1];
+
+// target a particular app
+const selectedApp = startChat.apps[0];
+
+// raise the intent, passing the given context, targeting the app
+await agent.raiseIntent(startChat.intent.name, context, selectedApp.name);
+```
+
+**Parameters:**
+
+| Name | Type |
+| ------ | ------ |
+| context | [Context](../#context) |
+
+**Returns:** `Promise`<`Array`<[AppIntent](appintent.md)>>
 
 ___
 <a id="open"></a>
@@ -135,7 +179,7 @@ ___
 
 ▸ **open**(name: *`string`*, context?: *[Context](../#context)*): `Promise`<`void`>
 
-*Defined in [interface.ts:90](/src/interface.ts#L90)*
+*Defined in [interface.ts:87](/src/interface.ts#L87)*
 
 Launches/links to an app by name.
 
@@ -166,7 +210,7 @@ ___
 
 ▸ **raiseIntent**(intent: *`string`*, context: *[Context](../#context)*, target?: *`string`*): `Promise`<[IntentResolution](intentresolution.md)>
 
-*Defined in [interface.ts:139](/src/interface.ts#L139)*
+*Defined in [interface.ts:166](/src/interface.ts#L166)*
 
 Raises an intent to the desktop agent to resolve.
 
